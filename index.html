@@ -29,9 +29,17 @@
         .temp { font-weight: 600; color: #2c3e50; font-size: 28px; }
         .desc { font-size: 16px; color: #7f8c8d; margin-left: 5px; }
         .bairro { font-size: 14px; color: #95a5a6; margin-left: 5px; }
+        #imagem-final {
+            display: none;
+            max-width: 100%;
+            height: auto;
+            border-radius: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
 <body>
+    <!-- Container HTML (visível apenas durante a atualização) -->
     <div id="widget-container">
         <span class="cidade" id="cidade">Barra Funda</span>
         <span class="bairro">SP</span>
@@ -40,7 +48,10 @@
         <span class="desc" id="desc"></span>
     </div>
 
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <!-- Tag img que vai receber a imagem final -->
+    <img id="imagem-final" alt="Previsão do tempo Barra Funda">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>
         const LAT = "-23.5245";
         const LON = "-46.6658";
@@ -58,6 +69,9 @@
             "50d":"🌫️","50n":"🌫️"
         };
 
+        const container = document.getElementById('widget-container');
+        const imagemFinal = document.getElementById('imagem-final');
+
         async function atualizar() {
             try {
                 const url = `https://api.openweathermap.org/data/2.5/weather?lat=${LAT}&lon=${LON}&units=metric&appid=${KEY}&lang=pt_br`;
@@ -69,24 +83,37 @@
                 document.getElementById('desc').textContent = capitalizar(d.weather[0].description);
             } catch {
                 document.getElementById('icone').textContent = "☁️";
+                document.getElementById('temp').textContent = "--°C";
                 document.getElementById('desc').textContent = "Offline";
             }
             
-            // Aguarda renderização e converte para imagem
+            // Garante que o container está visível para o html2canvas
+            container.style.display = 'inline-flex';
+            imagemFinal.style.display = 'none';
+            
+            // Pequeno atraso para o DOM atualizar
             setTimeout(() => {
-                const elemento = document.getElementById('widget-container');
-                html2canvas(elemento, {
+                html2canvas(container, {
                     backgroundColor: 'white',
                     scale: 2,
-                    logging: false
-                }).then(canvas => {
-                    // Substitui o HTML pela imagem
-                    elemento.parentNode.innerHTML = '';
-                    elemento.parentNode.appendChild(canvas);
+                    logging: false,
+                    allowTaint: false,
+                    useCORS: true
+                }).then((canvas) => {
+                    // Converte o canvas para uma data URL (imagem PNG)
+                    const dataURL = canvas.toDataURL('image/png');
+                    
+                    // Atualiza a imagem final
+                    imagemFinal.src = dataURL;
+                    
+                    // Esconde o container e mostra a imagem
+                    container.style.display = 'none';
+                    imagemFinal.style.display = 'block';
                 });
-            }, 100);
+            }, 200);
         }
         
+        // Executa imediatamente e a cada 30 minutos
         atualizar();
         setInterval(atualizar, 30 * 60 * 1000);
     </script>
