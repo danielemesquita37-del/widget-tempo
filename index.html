@@ -87,11 +87,11 @@
         
         const LATITUDE = "-23.5245";
         const LONGITUDE = "-46.6658";
-        const CHAVE_API = "SUA_CHAVE_QUANDO_CHEGAR"; // 🔑 Coloque aqui
+        const CHAVE_API = "04ebc24bf8afbd407fd0b32ed6f06d2a"; // ✅ Sua chave
         const UNIDADE = "metric";
         
         // =====================================
-        // FUNÇÃO PARA CAPITALIZAR (NOVO!)
+        // FUNÇÃO PARA CAPITALIZAR
         // =====================================
         function capitalizar(str) {
             return str.replace(/\b\w/g, letra => letra.toUpperCase());
@@ -120,13 +120,6 @@
         
         async function buscarTempo() {
             try {
-                if (CHAVE_API === "SUA_CHAVE_QUANDO_CHEGAR") {
-                    iconeEl.textContent = "⏳";
-                    temperaturaEl.textContent = "--°C";
-                    descricaoEl.textContent = "Aguardando Chave";
-                    return;
-                }
-                
                 const url = `https://api.openweathermap.org/data/2.5/weather?lat=${LATITUDE}&lon=${LONGITUDE}&units=${UNIDADE}&appid=${CHAVE_API}&lang=pt_br`;
                 
                 const resposta = await fetch(url);
@@ -144,7 +137,6 @@
                 temperaturaEl.textContent = temp + '°C';
                 
                 const descricao = dados.weather[0].description;
-                // ✅ APlica a capitalização aqui
                 descricaoEl.textContent = capitalizar(descricao);
                 
             } catch (erro) {
