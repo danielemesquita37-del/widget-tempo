@@ -2,18 +2,26 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Previsão Barra Funda</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Previsão do Tempo - Barra Funda</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
-            background: white;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: transparent;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            margin: 0;
-            font-family: 'Segoe UI', Roboto, sans-serif;
+            padding: 10px;
         }
-        #widget-container {
+        
+        .widget {
             background: white;
             border-radius: 30px;
             padding: 15px 25px;
@@ -24,98 +32,125 @@
             gap: 12px;
             font-size: 24px;
         }
-        .cidade { font-weight: 500; color: #333; font-size: 20px; }
-        .icone { font-size: 32px; }
-        .temp { font-weight: 600; color: #2c3e50; font-size: 28px; }
-        .desc { font-size: 16px; color: #7f8c8d; margin-left: 5px; }
-        .bairro { font-size: 14px; color: #95a5a6; margin-left: 5px; }
-        #imagem-final {
-            display: none;
-            max-width: 100%;
-            height: auto;
-            border-radius: 30px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        
+        .cidade {
+            font-weight: 500;
+            color: #333;
+            font-size: 20px;
+        }
+        
+        .icone {
+            font-size: 32px;
+            line-height: 1;
+        }
+        
+        .temperatura {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 28px;
+        }
+        
+        .descricao {
+            font-size: 16px;
+            color: #7f8c8d;
+            margin-left: 5px;
+        }
+        
+        .bairro {
+            font-size: 14px;
+            color: #95a5a6;
+            font-weight: normal;
+            margin-left: 5px;
+        }
+        
+        @media print {
+            .widget {
+                box-shadow: none;
+                border: 1px solid #ccc;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Container HTML (visível apenas durante a atualização) -->
-    <div id="widget-container">
+    <div class="widget" id="widget">
         <span class="cidade" id="cidade">Barra Funda</span>
-        <span class="bairro">SP</span>
+        <span class="bairro" id="bairro">SP</span>
         <span class="icone" id="icone">⏳</span>
-        <span class="temp" id="temp">--°C</span>
-        <span class="desc" id="desc"></span>
+        <span class="temperatura" id="temperatura">--°C</span>
+        <span class="descricao" id="descricao"></span>
     </div>
 
-    <!-- Tag img que vai receber a imagem final -->
-    <img id="imagem-final" alt="Previsão do tempo Barra Funda">
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>
-        const LAT = "-23.5245";
-        const LON = "-46.6658";
-        const KEY = "04ebc24bf8afbd407fd0b32ed6f06d2a";
+        // =====================================
+        // CONFIGURAÇÕES - BARRA FUNDA/SP
+        // =====================================
         
+        const LATITUDE = "-23.5245";
+        const LONGITUDE = "-46.6658";
+        const CHAVE_API = "04ebc24bf8afbd407fd0b32ed6f06d2a"; // ✅ Sua chave
+        const UNIDADE = "metric";
+        
+        // =====================================
+        // FUNÇÃO PARA CAPITALIZAR CORRETAMENTE (funciona com acentos)
+        // =====================================
         function capitalizar(str) {
-            return str.replace(/\b\w/g, l => l.toUpperCase());
-        }
-
-        const emoticons = {
-            "01d":"☀️","01n":"🌙","02d":"⛅","02n":"☁️",
-            "03d":"☁️","03n":"☁️","04d":"☁️","04n":"☁️",
-            "09d":"🌧️","09n":"🌧️","10d":"🌦️","10n":"🌧️",
-            "11d":"⛈️","11n":"⛈️","13d":"❄️","13n":"❄️",
-            "50d":"🌫️","50n":"🌫️"
-        };
-
-        const container = document.getElementById('widget-container');
-        const imagemFinal = document.getElementById('imagem-final');
-
-        async function atualizar() {
-            try {
-                const url = `https://api.openweathermap.org/data/2.5/weather?lat=${LAT}&lon=${LON}&units=metric&appid=${KEY}&lang=pt_br`;
-                const r = await fetch(url);
-                const d = await r.json();
-                
-                document.getElementById('icone').textContent = emoticons[d.weather[0].icon] || "🌡️";
-                document.getElementById('temp').textContent = Math.round(d.main.temp) + '°C';
-                document.getElementById('desc').textContent = capitalizar(d.weather[0].description);
-            } catch {
-                document.getElementById('icone').textContent = "☁️";
-                document.getElementById('temp').textContent = "--°C";
-                document.getElementById('desc').textContent = "Offline";
-            }
-            
-            // Garante que o container está visível para o html2canvas
-            container.style.display = 'inline-flex';
-            imagemFinal.style.display = 'none';
-            
-            // Pequeno atraso para o DOM atualizar
-            setTimeout(() => {
-                html2canvas(container, {
-                    backgroundColor: 'white',
-                    scale: 2,
-                    logging: false,
-                    allowTaint: false,
-                    useCORS: true
-                }).then((canvas) => {
-                    // Converte o canvas para uma data URL (imagem PNG)
-                    const dataURL = canvas.toDataURL('image/png');
-                    
-                    // Atualiza a imagem final
-                    imagemFinal.src = dataURL;
-                    
-                    // Esconde o container e mostra a imagem
-                    container.style.display = 'none';
-                    imagemFinal.style.display = 'block';
-                });
-            }, 200);
+            return str.replace(/(?:^|\s)\S/g, function(letra) {
+                return letra.toUpperCase();
+            });
         }
         
-        // Executa imediatamente e a cada 30 minutos
-        atualizar();
-        setInterval(atualizar, 30 * 60 * 1000);
+        // =====================================
+        // ELEMENTOS DA TELA
+        // =====================================
+        const cidadeEl = document.getElementById('cidade');
+        const bairroEl = document.getElementById('bairro');
+        const iconeEl = document.getElementById('icone');
+        const temperaturaEl = document.getElementById('temperatura');
+        const descricaoEl = document.getElementById('descricao');
+        
+        const emoticons = {
+            "01d": "☀️", "01n": "🌙",
+            "02d": "⛅", "02n": "☁️",
+            "03d": "☁️", "03n": "☁️",
+            "04d": "☁️", "04n": "☁️",
+            "09d": "🌧️", "09n": "🌧️",
+            "10d": "🌦️", "10n": "🌧️",
+            "11d": "⛈️", "11n": "⛈️",
+            "13d": "❄️", "13n": "❄️",
+            "50d": "🌫️", "50n": "🌫️"
+        };
+        
+        async function buscarTempo() {
+            try {
+                const url = `https://api.openweathermap.org/data/2.5/weather?lat=${LATITUDE}&lon=${LONGITUDE}&units=${UNIDADE}&appid=${CHAVE_API}&lang=pt_br`;
+                
+                const resposta = await fetch(url);
+                if (!resposta.ok) throw new Error('Erro na busca');
+                
+                const dados = await resposta.json();
+                
+                cidadeEl.textContent = "Barra Funda";
+                bairroEl.textContent = "SP";
+                
+                const iconeCodigo = dados.weather[0].icon;
+                iconeEl.textContent = emoticons[iconeCodigo] || "🌡️";
+                
+                const temp = Math.round(dados.main.temp);
+                temperaturaEl.textContent = temp + '°C';
+                
+                const descricao = dados.weather[0].description;
+                // ✅ Capitalização corrigida
+                descricaoEl.textContent = capitalizar(descricao);
+                
+            } catch (erro) {
+                iconeEl.textContent = "☁️";
+                temperaturaEl.textContent = "--°C";
+                descricaoEl.textContent = "Offline";
+            }
+        }
+        
+        buscarTempo();
+        setInterval(buscarTempo, 30 * 60 * 1000);
     </script>
 </body>
 </html>
