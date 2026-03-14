@@ -85,27 +85,27 @@
         // CONFIGURAÇÕES - BARRA FUNDA/SP
         // =====================================
         
-        // Coordenadas exatas da Barra Funda
         const LATITUDE = "-23.5245";
         const LONGITUDE = "-46.6658";
-        
-        // SUA CHAVE DA API JÁ ESTÁ AQUI ✅
-        const CHAVE_API = "04ebc24bf8afbd407fd0b32ed6f06d2a";
-        
-        // Unidade: "metric" pra Celsius
+        const CHAVE_API = "SUA_CHAVE_QUANDO_CHEGAR"; // 🔑 Coloque aqui
         const UNIDADE = "metric";
         
         // =====================================
-        // NÃO PRECISA MEXER DAQUI PRA BAIXO
+        // FUNÇÃO PARA CAPITALIZAR (NOVO!)
         // =====================================
+        function capitalizar(str) {
+            return str.replace(/\b\w/g, letra => letra.toUpperCase());
+        }
         
+        // =====================================
+        // ELEMENTOS DA TELA
+        // =====================================
         const cidadeEl = document.getElementById('cidade');
         const bairroEl = document.getElementById('bairro');
         const iconeEl = document.getElementById('icone');
         const temperaturaEl = document.getElementById('temperatura');
         const descricaoEl = document.getElementById('descricao');
         
-        // Mapeamento dos códigos do tempo para emoticons
         const emoticons = {
             "01d": "☀️", "01n": "🌙",
             "02d": "⛅", "02n": "☁️",
@@ -120,13 +120,17 @@
         
         async function buscarTempo() {
             try {
+                if (CHAVE_API === "SUA_CHAVE_QUANDO_CHEGAR") {
+                    iconeEl.textContent = "⏳";
+                    temperaturaEl.textContent = "--°C";
+                    descricaoEl.textContent = "Aguardando Chave";
+                    return;
+                }
+                
                 const url = `https://api.openweathermap.org/data/2.5/weather?lat=${LATITUDE}&lon=${LONGITUDE}&units=${UNIDADE}&appid=${CHAVE_API}&lang=pt_br`;
                 
                 const resposta = await fetch(url);
-                
-                if (!resposta.ok) {
-                    throw new Error('Erro na busca');
-                }
+                if (!resposta.ok) throw new Error('Erro na busca');
                 
                 const dados = await resposta.json();
                 
@@ -140,21 +144,17 @@
                 temperaturaEl.textContent = temp + '°C';
                 
                 const descricao = dados.weather[0].description;
-                descricaoEl.textContent = descricao;
+                // ✅ APlica a capitalização aqui
+                descricaoEl.textContent = capitalizar(descricao);
                 
             } catch (erro) {
-                cidadeEl.textContent = "Barra Funda";
-                bairroEl.textContent = "SP";
-                iconeEl.textContent = "⚠️";
+                iconeEl.textContent = "☁️";
                 temperaturaEl.textContent = "--°C";
-                descricaoEl.textContent = "offline";
+                descricaoEl.textContent = "Offline";
             }
         }
         
-        // Busca imediatamente
         buscarTempo();
-        
-        // Atualiza a cada 30 minutos
         setInterval(buscarTempo, 30 * 60 * 1000);
     </script>
 </body>
