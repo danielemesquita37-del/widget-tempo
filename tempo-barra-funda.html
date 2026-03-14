@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Previsão do Tempo - Barra Funda</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: transparent;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 10px;
+        }
+        
+        .widget {
+            background: white;
+            border-radius: 30px;
+            padding: 15px 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 1px solid #eaeaea;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
+        }
+        
+        .cidade {
+            font-weight: 500;
+            color: #333;
+            font-size: 20px;
+        }
+        
+        .icone {
+            font-size: 32px;
+            line-height: 1;
+        }
+        
+        .temperatura {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 28px;
+        }
+        
+        .descricao {
+            font-size: 16px;
+            color: #7f8c8d;
+            margin-left: 5px;
+        }
+        
+        .bairro {
+            font-size: 14px;
+            color: #95a5a6;
+            font-weight: normal;
+            margin-left: 5px;
+        }
+        
+        @media print {
+            .widget {
+                box-shadow: none;
+                border: 1px solid #ccc;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="widget" id="widget">
+        <span class="cidade" id="cidade">Barra Funda</span>
+        <span class="bairro" id="bairro">SP</span>
+        <span class="icone" id="icone">⏳</span>
+        <span class="temperatura" id="temperatura">--°C</span>
+        <span class="descricao" id="descricao"></span>
+    </div>
+
+    <script>
+        // =====================================
+        // CONFIGURAÇÕES - BARRA FUNDA/SP
+        // =====================================
+        
+        // Coordenadas exatas da Barra Funda
+        const LATITUDE = "-23.5245";
+        const LONGITUDE = "-46.6658";
+        
+        // SUA CHAVE DA API JÁ ESTÁ AQUI ✅
+        const CHAVE_API = "04ebc24bf8afbd407fd0b32ed6f06d2a";
+        
+        // Unidade: "metric" pra Celsius
+        const UNIDADE = "metric";
+        
+        // =====================================
+        // NÃO PRECISA MEXER DAQUI PRA BAIXO
+        // =====================================
+        
+        const cidadeEl = document.getElementById('cidade');
+        const bairroEl = document.getElementById('bairro');
+        const iconeEl = document.getElementById('icone');
+        const temperaturaEl = document.getElementById('temperatura');
+        const descricaoEl = document.getElementById('descricao');
+        
+        // Mapeamento dos códigos do tempo para emoticons
+        const emoticons = {
+            "01d": "☀️", "01n": "🌙",
+            "02d": "⛅", "02n": "☁️",
+            "03d": "☁️", "03n": "☁️",
+            "04d": "☁️", "04n": "☁️",
+            "09d": "🌧️", "09n": "🌧️",
+            "10d": "🌦️", "10n": "🌧️",
+            "11d": "⛈️", "11n": "⛈️",
+            "13d": "❄️", "13n": "❄️",
+            "50d": "🌫️", "50n": "🌫️"
+        };
+        
+        async function buscarTempo() {
+            try {
+                const url = `https://api.openweathermap.org/data/2.5/weather?lat=${LATITUDE}&lon=${LONGITUDE}&units=${UNIDADE}&appid=${CHAVE_API}&lang=pt_br`;
+                
+                const resposta = await fetch(url);
+                
+                if (!resposta.ok) {
+                    throw new Error('Erro na busca');
+                }
+                
+                const dados = await resposta.json();
+                
+                cidadeEl.textContent = "Barra Funda";
+                bairroEl.textContent = "SP";
+                
+                const iconeCodigo = dados.weather[0].icon;
+                iconeEl.textContent = emoticons[iconeCodigo] || "🌡️";
+                
+                const temp = Math.round(dados.main.temp);
+                temperaturaEl.textContent = temp + '°C';
+                
+                const descricao = dados.weather[0].description;
+                descricaoEl.textContent = descricao;
+                
+            } catch (erro) {
+                cidadeEl.textContent = "Barra Funda";
+                bairroEl.textContent = "SP";
+                iconeEl.textContent = "⚠️";
+                temperaturaEl.textContent = "--°C";
+                descricaoEl.textContent = "offline";
+            }
+        }
+        
+        // Busca imediatamente
+        buscarTempo();
+        
+        // Atualiza a cada 30 minutos
+        setInterval(buscarTempo, 30 * 60 * 1000);
+    </script>
+</body>
+</html>
