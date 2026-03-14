@@ -2,137 +2,93 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Tempo Barra Funda</title>
+    <title>Previsão Barra Funda</title>
     <style>
         body {
-            background: transparent;
+            background: white;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            padding: 10px;
+            font-family: 'Segoe UI', Roboto, sans-serif;
         }
-        canvas {
+        #widget-container {
             background: white;
             border-radius: 30px;
+            padding: 15px 25px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             border: 1px solid #eaeaea;
-            display: block;
-            max-width: 100%;
-            height: auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
         }
+        .cidade { font-weight: 500; color: #333; font-size: 20px; }
+        .icone { font-size: 32px; }
+        .temp { font-weight: 600; color: #2c3e50; font-size: 28px; }
+        .desc { font-size: 16px; color: #7f8c8d; margin-left: 5px; }
+        .bairro { font-size: 14px; color: #95a5a6; margin-left: 5px; }
     </style>
 </head>
 <body>
-    <canvas id="widgetCanvas" width="400" height="70"></canvas>
+    <div id="widget-container">
+        <span class="cidade" id="cidade">Barra Funda</span>
+        <span class="bairro">SP</span>
+        <span class="icone" id="icone">⏳</span>
+        <span class="temp" id="temp">--°C</span>
+        <span class="desc" id="desc"></span>
+    </div>
 
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script>
-        // =====================================
-        // CONFIGURAÇÕES (já com sua chave)
-        // =====================================
-        const LATITUDE = "-23.5245";
-        const LONGITUDE = "-46.6658";
-        const CHAVE_API = "04ebc24bf8afbd407fd0b32ed6f06d2a"; // ✅ Sua chave
-        const UNIDADE = "metric";
-
-        // Mapa de emoticons
-        const emoticons = {
-            "01d": "☀️", "01n": "🌙", "02d": "⛅", "02n": "☁️",
-            "03d": "☁️", "03n": "☁️", "04d": "☁️", "04n": "☁️",
-            "09d": "🌧️", "09n": "🌧️", "10d": "🌦️", "10n": "🌧️",
-            "11d": "⛈️", "11n": "⛈️", "13d": "❄️", "13n": "❄️",
-            "50d": "🌫️", "50n": "🌫️"
-        };
-
-        // Função para capitalizar cada palavra
+        const LAT = "-23.5245";
+        const LON = "-46.6658";
+        const KEY = "04ebc24bf8afbd407fd0b32ed6f06d2a";
+        
         function capitalizar(str) {
-            return str.replace(/\b\w/g, letra => letra.toUpperCase());
+            return str.replace(/\b\w/g, l => l.toUpperCase());
         }
 
-        // Função para desenhar o widget no canvas
-        async function desenharWidget() {
-            const canvas = document.getElementById('widgetCanvas');
-            const ctx = canvas.getContext('2d');
-
-            // Valores padrão
-            let cidade = "Barra Funda";
-            let icone = "⏳";
-            let temperatura = "--°C";
-            let descricao = "Aguardando API...";
-
-            try {
-                const url = `https://api.openweathermap.org/data/2.5/weather?lat=${LATITUDE}&lon=${LONGITUDE}&units=${UNIDADE}&appid=${CHAVE_API}&lang=pt_br`;
-                const resp = await fetch(url);
-                if (!resp.ok) throw new Error('Erro na API');
-                const dados = await resp.json();
-
-                icone = emoticons[dados.weather[0].icon] || "🌡️";
-                temperatura = Math.round(dados.main.temp) + "°C";
-                descricao = capitalizar(dados.weather[0].description);
-            } catch (e) {
-                icone = "☁️";
-                descricao = "Offline";
-            }
-
-            // Limpa o canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Fundo branco com sombra
-            ctx.fillStyle = "white";
-            ctx.shadowColor = "rgba(0,0,0,0.1)";
-            ctx.shadowBlur = 15;
-            ctx.shadowOffsetY = 4;
-            ctx.beginPath();
-            ctx.roundRect(0, 0, canvas.width, canvas.height, 35);
-            ctx.fill();
-            ctx.shadowColor = "transparent";
-            ctx.strokeStyle = "#eaeaea";
-            ctx.lineWidth = 1;
-            ctx.stroke();
-
-            // Desenha o texto
-            ctx.font = "500 20px 'Segoe UI', Roboto, sans-serif";
-            ctx.fillStyle = "#333";
-            ctx.fillText(cidade, 20, 42);
-
-            ctx.font = "32px 'Segoe UI', Roboto, sans-serif";
-            ctx.fillStyle = "#2c3e50";
-            ctx.fillText(temperatura, 190, 50);
-
-            ctx.font = "36px sans-serif";
-            ctx.fillStyle = "#333";
-            ctx.fillText(icone, 130, 52);
-
-            ctx.font = "16px 'Segoe UI', Roboto, sans-serif";
-            ctx.fillStyle = "#7f8c8d";
-            ctx.fillText(descricao, 260, 50);
-
-            // Desenha "SP" pequeno ao lado da cidade
-            ctx.font = "14px 'Segoe UI', Roboto, sans-serif";
-            ctx.fillStyle = "#95a5a6";
-            ctx.fillText("SP", 130, 30);
-        }
-
-        // Helper para retângulo arredondado
-        CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
-            if (w < 2 * r) r = w / 2;
-            if (h < 2 * r) r = h / 2;
-            this.moveTo(x + r, y);
-            this.lineTo(x + w - r, y);
-            this.quadraticCurveTo(x + w, y, x + w, y + r);
-            this.lineTo(x + w, y + h - r);
-            this.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-            this.lineTo(x + r, y + h);
-            this.quadraticCurveTo(x, y + h, x, y + h - r);
-            this.lineTo(x, y + r);
-            this.quadraticCurveTo(x, y, x + r, y);
-            return this;
+        const emoticons = {
+            "01d":"☀️","01n":"🌙","02d":"⛅","02n":"☁️",
+            "03d":"☁️","03n":"☁️","04d":"☁️","04n":"☁️",
+            "09d":"🌧️","09n":"🌧️","10d":"🌦️","10n":"🌧️",
+            "11d":"⛈️","11n":"⛈️","13d":"❄️","13n":"❄️",
+            "50d":"🌫️","50n":"🌫️"
         };
 
-        // Desenha imediatamente e a cada 30 minutos
-        desenharWidget();
-        setInterval(desenharWidget, 30 * 60 * 1000);
+        async function atualizar() {
+            try {
+                const url = `https://api.openweathermap.org/data/2.5/weather?lat=${LAT}&lon=${LON}&units=metric&appid=${KEY}&lang=pt_br`;
+                const r = await fetch(url);
+                const d = await r.json();
+                
+                document.getElementById('icone').textContent = emoticons[d.weather[0].icon] || "🌡️";
+                document.getElementById('temp').textContent = Math.round(d.main.temp) + '°C';
+                document.getElementById('desc').textContent = capitalizar(d.weather[0].description);
+            } catch {
+                document.getElementById('icone').textContent = "☁️";
+                document.getElementById('desc').textContent = "Offline";
+            }
+            
+            // Aguarda renderização e converte para imagem
+            setTimeout(() => {
+                const elemento = document.getElementById('widget-container');
+                html2canvas(elemento, {
+                    backgroundColor: 'white',
+                    scale: 2,
+                    logging: false
+                }).then(canvas => {
+                    // Substitui o HTML pela imagem
+                    elemento.parentNode.innerHTML = '';
+                    elemento.parentNode.appendChild(canvas);
+                });
+            }, 100);
+        }
+        
+        atualizar();
+        setInterval(atualizar, 30 * 60 * 1000);
     </script>
 </body>
 </html>
