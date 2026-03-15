@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <title>Previsão Barra Funda</title>
-    <meta http-equiv="refresh" content="2">
     <style>
         body {
-            background: white;
+            background: transparent;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
+            padding: 10px;
             font-family: 'Segoe UI', Roboto, sans-serif;
         }
-        #widget-container {
+        #widget-container, #imagem-final {
             background: white;
             border-radius: 30px;
             padding: 15px 25px;
@@ -31,15 +31,15 @@
         .desc { font-size: 16px; color: #7f8c8d; margin-left: 5px; }
         .bairro { font-size: 14px; color: #95a5a6; margin-left: 5px; }
         #imagem-final {
-            max-width: 100%;
-            height: auto;
-            border-radius: 30px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: none;
+            padding: 0;
+            box-shadow: none;
+            border: none;
         }
     </style>
 </head>
 <body>
-    <!-- Container HTML que será convertido em imagem -->
+    <!-- Container HTML (invisível após primeira carga) -->
     <div id="widget-container">
         <span class="cidade" id="cidade">Barra Funda</span>
         <span class="bairro">SP</span>
@@ -48,16 +48,17 @@
         <span class="desc" id="desc"></span>
     </div>
 
-    <!-- Onde a imagem final aparecerá -->
-    <div id="resultado" style="display: none;">
-        <img id="imagem-final" alt="Previsão do tempo">
-    </div>
+    <!-- Imagem final (o que o usuário vê depois) -->
+    <img id="imagem-final" alt="Previsão do tempo">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>
         const LAT = "-23.5245";
         const LON = "-46.6658";
         const KEY = "04ebc24bf8afbd407fd0b32ed6f06d2a";
+        
+        // ⚡ Flag para controlar se já convertemos para imagem
+        let imagemPronta = false;
         
         function capitalizar(str) {
             return str.replace(/(?:^|\s)\S/g, l => l.toUpperCase());
@@ -72,10 +73,9 @@
         };
 
         const container = document.getElementById('widget-container');
-        const resultadoDiv = document.getElementById('resultado');
         const imagemFinal = document.getElementById('imagem-final');
 
-        async function atualizar() {
+        async function buscarDados() {
             try {
                 const url = `https://api.openweathermap.org/data/2.5/weather?lat=${LAT}&lon=${LON}&units=metric&appid=${KEY}&lang=pt_br`;
                 const r = await fetch(url);
@@ -90,27 +90,67 @@
                 document.getElementById('desc').textContent = "Offline";
             }
             
-            // Converte para imagem
-            setTimeout(() => {
+            // Se ainda não temos a imagem pronta, converte agora
+            if (!imagemPronta) {
+                setTimeout(converterParaImagem, 200);
+            }
+        }
+        
+        function converterParaImagem() {
+            html2canvas(container, {
+                backgroundColor: 'white',
+                scale: 2,
+                logging: false,
+                allowTaint: false,
+                useCORS: true
+            }).then((canvas) => {
+                const dataURL = canvas.toDataURL('image/png');
+                
+                // Esconde o container HTML
+                container.style.display = 'none';
+                
+                // Mostra a imagem final
+                imagemFinal.src = dataURL;
+                imagemFinal.style.display = 'inline-flex';
+                
+                // Marca que já temos a imagem
+                imagemPronta = true;
+            });
+        }
+        
+        // ⚡ Atualização silenciosa (sem piscar)
+        async function atualizarSilencioso() {
+            if (!imagemPronta) return;
+            
+            try {
+                const url = `https://api.openweathermap.org/data/2.5/weather?lat=${LAT}&lon=${LON}&units=metric&appid=${KEY}&lang=pt_br`;
+                const r = await fetch(url);
+                const d = await r.json();
+                
+                // Atualiza os dados no container (que está oculto)
+                document.getElementById('icone').textContent = emoticons[d.weather[0].icon] || "🌡️";
+                document.getElementById('temp').textContent = Math.round(d.main.temp) + '°C';
+                document.getElementById('desc').textContent = capitalizar(d.weather[0].description);
+                
+                // Regenera a imagem sem mostrar o container
                 html2canvas(container, {
                     backgroundColor: 'white',
                     scale: 2,
                     logging: false
                 }).then((canvas) => {
                     const dataURL = canvas.toDataURL('image/png');
-                    
-                    // Esconde o container e mostra a imagem
-                    container.style.display = 'none';
-                    imagemFinal.src = dataURL;
-                    resultadoDiv.style.display = 'flex';
-                    resultadoDiv.style.justifyContent = 'center';
+                    imagemFinal.src = dataURL; // troca a imagem sem piscar
                 });
-            }, 200);
+            } catch (e) {
+                // ignora erro silenciosamente
+            }
         }
         
-        atualizar();
-        // Atualiza a cada 30 minutos
-        setInterval(atualizar, 30 * 60 * 1000);
+        // Inicia o processo
+        buscarDados();
+        
+        // Atualiza a cada 30 minutos (sem piscar)
+        setInterval(atualizarSilencioso, 30 * 60 * 1000);
     </script>
 </body>
 </html>
