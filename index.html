@@ -6,56 +6,37 @@
 </head>
 <body>
     <script>
-        // Mapa de condições do CPTEC para emoticons
-        // Códigos: 'ec' = encoberto, 'pc' = parcialmente nublado, 'pn' = poucas nuvens, 
-        // 'ps' = predomínio de sol, 'c' = chuva, 'nt' = noite, etc.
+        const LAT = "-23.5245";
+        const LON = "-46.6658";
+        const KEY = "04ebc24bf8afbd407fd0b32ed6f06d2a";
+        
         const icones = {
-            'ec': '☁️',    // encoberto
-            'pc': '⛅',     // parcialmente nublado  
-            'pn': '⛅',     // poucas nuvens
-            'ps': '☀️',    // predomínio de sol
-            'c': '🌧️',     // chuva
-            'nt': '🌙',     // noite
-            'sc': '🌧️',    // sem chuva
-            'cv': '⛈️',     // chuvisco
-            't': '⛈️',      // tempestade
-            'ne': '🌫️'      // neblina
+            "01d": "☀️", "01n": "🌙",
+            "02d": "⛅", "02n": "☁️",
+            "03d": "☁️", "03n": "☁️",
+            "04d": "☁️", "04n": "☁️",
+            "09d": "🌧️", "09n": "🌧️",
+            "10d": "🌦️", "10n": "🌧️",
+            "11d": "⛈️", "11n": "⛈️",
+            "13d": "❄️", "13n": "❄️",
+            "50d": "🌫️", "50n": "🌫️"
         };
-
-        // Função para capitalizar primeira letra
-        function capitalizar(str) {
-            return str.charAt(0).toUpperCase() + str.slice(1);
-        }
-
-        // Buscar previsão para São Paulo (código 244)
-        fetch('https://servicos.cptec.inpe.br/XML/cidade/244/previsao.xml')
-            .then(response => response.text())
-            .then(str => new window.DOMParser().parseFromString(str, "text/xml"))
-            .then(xml => {
-                // Pega a previsão para hoje
-                const previsoes = xml.getElementsByTagName('previsao');
-                const hoje = previsoes[0];
+        
+        // Usa AllOrigins para evitar CORS
+        const apiUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${LAT}&lon=${LON}&units=metric&appid=${KEY}`;
+        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`;
+        
+        fetch(proxyUrl)
+            .then(r => r.json())
+            .then(d => {
+                const temp = Math.round(d.main.temp);
+                const icone = icones[d.weather[0].icon] || "🌡️";
                 
-                const tempo = hoje.getElementsByTagName('tempo')[0].textContent;
-                const maxima = hoje.getElementsByTagName('maxima')[0].textContent;
-                const minima = hoje.getElementsByTagName('minima')[0].textContent;
-                const icone = icones[tempo] || '🌡️';
-                
-                // Decide se mostra máxima ou mínima baseado na hora
-                const hora = new Date().getHours();
-                let temperatura;
-                if (hora < 12) {
-                    temperatura = minima + '°C'; // Manhã: mostra mínima
-                } else {
-                    temperatura = maxima + '°C'; // Tarde: mostra máxima
-                }
-                
-                const linkBadge = `https://img.shields.io/badge/Barra%20Funda-${icone}%20${temperatura}-4682B4?style=for-the-badge`;
+                const linkBadge = `https://img.shields.io/badge/Barra%20Funda-${icone}%20${temp}°C-4682B4?style=for-the-badge`;
                 window.location.href = linkBadge;
             })
-            .catch(erro => {
-                console.error('Erro detalhado:', erro);
-                window.location.href = "https://img.shields.io/badge/Barra%20Funda-⏳%20Erro-red?style=for-the-badge";
+            .catch(() => {
+                window.location.href = "https://img.shields.io/badge/Barra%20Funda-Erro-red?style=for-the-badge";
             });
     </script>
 </body>
