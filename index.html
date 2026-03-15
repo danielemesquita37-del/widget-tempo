@@ -1,9 +1,43 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta http-equiv="refresh" content="0; url=https://img.shields.io/badge/Barra%20Funda-22°C-blue">
+    <meta charset="UTF-8">
+    <title>Previsão Barra Funda</title>
 </head>
 <body>
-    <p>Redirecionando...</p>
+    <script>
+        const LAT = "-23.5245";
+        const LON = "-46.6658";
+        const KEY = "04ebc24bf8afbd407fd0b32ed6f06d2a";
+        
+        async function gerarLinkBadge() {
+            try {
+                const url = `https://api.openweathermap.org/data/2.5/weather?lat=${LAT}&lon=${LON}&units=metric&appid=${KEY}&lang=pt_br`;
+                const r = await fetch(url);
+                const d = await r.json();
+                
+                const temperatura = Math.round(d.main.temp);
+                const icone = {
+                    "01d":"☀️","01n":"🌙","02d":"⛅","02n":"☁️",
+                    "03d":"☁️","03n":"☁️","04d":"☁️","04n":"☁️",
+                    "09d":"🌧️","09n":"🌧️","10d":"🌦️","10n":"🌧️",
+                    "11d":"⛈️","11n":"⛈️","13d":"❄️","13n":"❄️",
+                    "50d":"🌫️","50n":"🌫️"
+                }[d.weather[0].icon] || "🌡️";
+                
+                // 👇 Monta o link do Shields.io
+                const linkBadge = `https://img.shields.io/badge/Barra%20Funda%20${icone}-${temperatura}°C-4682B4?style=for-the-badge`;
+                
+                // Redireciona para o badge
+                window.location.href = linkBadge;
+                
+            } catch {
+                // Fallback se der erro
+                window.location.href = "https://img.shields.io/badge/Barra%20Funda-Offline-gray?style=for-the-badge";
+            }
+        }
+        
+        gerarLinkBadge();
+    </script>
 </body>
 </html>
