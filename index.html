@@ -5,6 +5,9 @@
     <title>Clima Barra Funda</title>
 </head>
 <body>
+    <!-- Imagem que será atualizada -->
+    <img id="clima" style="max-width:100%; height:auto; border-radius:30px; box-shadow:0 4px 15px rgba(0,0,0,0.1);">
+    
     <script>
         const LAT = "-23.5245";
         const LON = "-46.6658";
@@ -22,22 +25,30 @@
             "50d": "🌫️", "50n": "🌫️"
         };
         
-        // Usa AllOrigins para evitar CORS
-        const apiUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${LAT}&lon=${LON}&units=metric&appid=${KEY}`;
-        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`;
+        function atualizarImagem() {
+            const apiUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${LAT}&lon=${LON}&units=metric&appid=${KEY}`;
+            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`;
+            
+            fetch(proxyUrl)
+                .then(r => r.json())
+                .then(d => {
+                    const temp = Math.round(d.main.temp);
+                    const icone = icones[d.weather[0].icon] || "🌡️";
+                    
+                    // Monta a URL da imagem diretamente
+                    const imagemUrl = `https://img.shields.io/badge/Barra%20Funda-${icone}%20${temp}°C-4682B4?style=for-the-badge`;
+                    
+                    // Atualiza o src da imagem
+                    document.getElementById('clima').src = imagemUrl;
+                })
+                .catch(() => {
+                    document.getElementById('clima').src = "https://img.shields.io/badge/Barra%20Funda-Erro-red?style=for-the-badge";
+                });
+        }
         
-        fetch(proxyUrl)
-            .then(r => r.json())
-            .then(d => {
-                const temp = Math.round(d.main.temp);
-                const icone = icones[d.weather[0].icon] || "🌡️";
-                
-                const linkBadge = `https://img.shields.io/badge/Barra%20Funda-${icone}%20${temp}°C-4682B4?style=for-the-badge`;
-                window.location.href = linkBadge;
-            })
-            .catch(() => {
-                window.location.href = "https://img.shields.io/badge/Barra%20Funda-Erro-red?style=for-the-badge";
-            });
+        // Atualiza agora e a cada 30 minutos
+        atualizarImagem();
+        setInterval(atualizarImagem, 30 * 60 * 1000);
     </script>
 </body>
 </html>
