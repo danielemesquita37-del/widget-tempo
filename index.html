@@ -2,59 +2,38 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Previsão Barra Funda</title>
+    <title>Clima Barra Funda</title>
 </head>
 <body>
     <script>
-        const LAT = "-23.5245";
-        const LON = "-46.6658";
-        const KEY = "04ebc24bf8afbd407fd0b32ed6f06d2a";
+        // Coordenadas de Barra Funda
+        const lat = -23.5245;
+        const lon = -46.6658;
         
-        const emoticons = {
-            "01d": "☀️", "01n": "🌙",
-            "02d": "⛅", "02n": "☁️",
-            "03d": "☁️", "03n": "☁️",
-            "04d": "☁️", "04n": "☁️",
-            "09d": "🌧️", "09n": "🌧️",
-            "10d": "🌦️", "10n": "🌧️",
-            "11d": "⛈️", "11n": "⛈️",
-            "13d": "❄️", "13n": "❄️",
-            "50d": "🌫️", "50n": "🌫️"
+        // Mapa de códigos do CPTEC para emoticons
+        const icones = {
+            "1": "☀️", // céu claro
+            "2": "☀️", // sol com algumas nuvens
+            "3": "⛅",  // parcialmente nublado
+            "4": "☁️", // nublado
+            "5": "🌧️", // chuva
+            "6": "⛈️", // tempestade
+            "7": "🌫️", // neblina
         };
         
-        async function gerarLinkBadge() {
-            try {
-                const url = `https://api.openweathermap.org/data/2.5/weather?lat=${LAT}&lon=${LON}&units=metric&appid=${KEY}&lang=pt_br`;
-                console.log("Buscando:", url);
+        fetch(`https://apitempo.inmet.gov.br/estacao/proxima/${lat}/${lon}`)
+            .then(r => r.json())
+            .then(d => {
+                const temp = Math.round(d.temp);
+                const codigo = d.condicao;
+                const icone = icones[codigo] || "🌡️";
                 
-                const r = await fetch(url);
-                console.log("Status:", r.status);
-                
-                if (!r.ok) {
-                    throw new Error(`HTTP ${r.status}`);
-                }
-                
-                const d = await r.json();
-                console.log("Dados recebidos:", d);
-                
-                const temperatura = Math.round(d.main.temp);
-                const iconeCodigo = d.weather[0].icon;
-                const icone = emoticons[iconeCodigo] || "🌡️";
-                
-                // 👇 Monta o link com os dados REAIS
-                const linkBadge = `https://img.shields.io/badge/Barra%20Funda%20${icone}-${temperatura}°C-4682B4?style=for-the-badge`;
-                
-                console.log("Redirecionando para:", linkBadge);
-                window.location.href = linkBadge;
-                
-            } catch (erro) {
-                console.error("ERRO:", erro);
-                // Fallback
-                window.location.href = "https://img.shields.io/badge/Barra%20Funda-⚠️%20Erro-gray?style=for-the-badge";
-            }
-        }
-        
-        gerarLinkBadge();
+                const link = `https://img.shields.io/badge/Barra%20Funda-${icone}%20${temp}°C-4682B4?style=for-the-badge`;
+                window.location.href = link;
+            })
+            .catch(() => {
+                window.location.href = "https://img.shields.io/badge/Barra%20Funda-Erro-red?style=for-the-badge";
+            });
     </script>
 </body>
 </html>
